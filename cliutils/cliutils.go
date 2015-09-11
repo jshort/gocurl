@@ -2,26 +2,22 @@ package cliutils
 
 import (
         "fmt"
-        "os"
 )
 
 var HttpVerbs = []string{"GET", "PUT", "POST", "DELETE", "PATCH"}
 
-func ValidateOptions(m map[string]string) {
+func ValidateOptions(m map[string]string) (int, string) {
         if ! contains(HttpVerbs, m["httpVerb"]) {
-                exitWithMessage(1, fmt.Sprintf("Unnexpected HTTP Verb: %s", m["httpVerb"]))
+                return 1, fmt.Sprintf("Unexpected HTTP Verb: %s", m["httpVerb"])
         }
+        return 0, ""
 }
 
-func ValidateArguments(args []string) {
+func ValidateArguments(args []string) (int, string) {
         if len(args) != 1 {
-                exitWithMessage(1, "Expecting 1 positional argument.")
+                return 2, "Expecting 1 positional argument."
         }
-}
-
-func exitWithMessage(code int, message string) {
-        fmt.Println(message)
-        os.Exit(code)
+        return 0, ""
 }
 
 // Checks if an array/slice contains a given string

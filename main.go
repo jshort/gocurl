@@ -3,7 +3,7 @@ package main
 import (
         "fmt"
         "os"
-        goopt "github.com/jshort/goopt"
+        goopt "github.com/droundy/goopt"
         cliutils "github.com/jshort/gocurl/cliutils"
         httputils "github.com/jshort/gocurl/httputils"
 )
@@ -36,23 +36,20 @@ func cliSetup() ([]string, map[string]string) {
         options["postData"]   = *postData
         options["timeOut"]    = *timeOut
         
-        cliutils.ValidateOptions(options)
-        cliutils.ValidateArguments(goopt.Args)
+        exitWithMessageIfNonZero(cliutils.ValidateOptions(options))
+        exitWithMessageIfNonZero(cliutils.ValidateArguments(goopt.Args))
 
         return goopt.Args, options
 }
 
 func run(args []string, options map[string]string) int {
-        for key, value := range options {
-                fmt.Printf("%s is: %s\n", key, value)
-        }
-        fmt.Println("Args are: ", args)
+        // This should eventually be in verbose only
+        printOptionsAndArgs(args, options)
 
         var retval int
 
         switch options["httpVerb"] {
         case "GET":
-                fmt.Println("Hi James")
                 retval = httputils.Get(args[0], options)
         case "POST":
                 retval = httputils.Post(args[0], options)
@@ -67,4 +64,16 @@ func run(args []string, options map[string]string) int {
         return retval
 }
 
-// Helpers to be moved
+func exitWithMessageIfNonZero(code int, message string) {
+        if code != 0 {
+                fmt.Println(message)
+                os.Exit(code)
+        }
+}
+
+func printOptionsAndArgs(args []string, options map[string]string) {
+        for key, value := range options {
+                fmt.Printf("%s is: %s\n", key, value)
+        }
+        fmt.Println("Args are: ", args)
+}
