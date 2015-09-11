@@ -1,4 +1,4 @@
-# gocurl
+# gocurl [![Build Status](https://travis-ci.org/jshort/gocurl.svg?branch=master)](https://travis-ci.org/jshort/gocurl)
 Http client in golang
 
 My goals are to:
