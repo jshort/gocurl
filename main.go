@@ -8,8 +8,6 @@ import (
         httputils "github.com/jshort/gocurl/httputils"
 )
 
-var amVerbose *bool
-
 func main() {
         cliInputs := cliSetup()
         os.Exit(run(cliInputs))
@@ -22,6 +20,7 @@ func cliSetup() *cliutils.GoCurlCli {
                 "postData"    : "",
                 "timeOut"     : 60,
                 "arguments"   : []string{},
+                "verbose"     : false,
         }
 
 
@@ -33,8 +32,7 @@ func cliSetup() *cliutils.GoCurlCli {
                 "DATA", "HTTP Data for POST")
         var timeOut    = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliMap["timeOut"].(int),
                 "TIMEOUT", "Timeout in seconds for request")
-
-        amVerbose      = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
+        var isVerbose  = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
 
         goopt.Summary = "Golang based http client program"
         goopt.Parse(nil)
@@ -43,6 +41,7 @@ func cliSetup() *cliutils.GoCurlCli {
         cliMap["httpHeaders"] = *httpHeaders
         cliMap["postData"]    = *postData
         cliMap["timeOut"]     = *timeOut
+        cliMap["verbose"]     = *isVerbose
         cliMap["arguments"]   = goopt.Args
 
         cliInputs := cliutils.InititializeCli(cliMap)
@@ -55,7 +54,6 @@ func cliSetup() *cliutils.GoCurlCli {
 
 func run(cliInputs *cliutils.GoCurlCli) int {
         printOptionsAndArgs(cliInputs)
-
         return httputils.SubmitRequest(cliInputs)
 }
 
@@ -67,7 +65,7 @@ func exitWithMessageIfNonZero(code int, message string) {
 }
 
 func printOptionsAndArgs(cliInputs *cliutils.GoCurlCli) {
-        if *amVerbose {
+        if cliInputs.Verbose() {
                 cliInputs.Print()
         }
 }

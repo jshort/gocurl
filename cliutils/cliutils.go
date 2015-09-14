@@ -11,6 +11,7 @@ type GoCurlCli struct {
         httpHeaders []string
         postData string
         timeout int
+        verbose bool
         arguments []string
 }
 
@@ -20,6 +21,7 @@ func InititializeCli(m map[string]interface{}) *GoCurlCli {
         cliInputs.httpHeaders = m["httpHeaders"].([]string)
         cliInputs.postData = m["postData"].(string)
         cliInputs.timeout = m["timeOut"].(int)
+        cliInputs.verbose = m["verbose"].(bool)
         cliInputs.arguments = m["arguments"].([]string)
         return cliInputs
 }
@@ -54,6 +56,10 @@ func (cliInputs *GoCurlCli) PostData() string {
 
 func (cliInputs *GoCurlCli) TimeOut() int {
         return cliInputs.timeout
+}
+
+func (cliInputs *GoCurlCli) Verbose() bool {
+        return cliInputs.verbose
 }
 
 func (cliInputs *GoCurlCli) Url() string {

@@ -33,7 +33,11 @@ func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
 func get(cliInputs *cliutils.GoCurlCli) int {
 
         req, err := http.NewRequest("GET", cliInputs.Url(), nil)
-        for key, value := range parseHeaderString(cliInputs.HttpHeaders()) {
+        headerMap, ok := parseHeaderString(cliInputs.HttpHeaders())
+        if !ok {
+                return 1
+        }
+        for key, value := range headerMap {
                 req.Header.Set(key, value)
         }
 
@@ -58,7 +62,11 @@ func get(cliInputs *cliutils.GoCurlCli) int {
 func post(cliInputs *cliutils.GoCurlCli) int {
         var postBody = []byte(cliInputs.PostData())
         req, err := http.NewRequest("POST", cliInputs.Url(), bytes.NewBuffer(postBody))
-        for key, value := range parseHeaderString(cliInputs.HttpHeaders()) {
+        headerMap, ok := parseHeaderString(cliInputs.HttpHeaders())
+        if !ok {
+                return 1
+        }
+        for key, value := range headerMap {
                 req.Header.Set(key, value)
         }
 
@@ -97,12 +105,14 @@ func dummyReturn() int {
         return 255
 }
 
-func parseHeaderString(headers []string) map[string]string {
+func parseHeaderString(headers []string) (map[string]string, bool) {
         var headerMap = make(map[string]string)
         for _, header := range headers {
                 tokens := strings.Split(header, ":")
-                // Should have validation
+                if len(tokens) != 2 {
+                        return nil, false
+                }
                 headerMap[tokens[0]] = tokens[1]
         }
-        return headerMap
+        return headerMap, true
 }

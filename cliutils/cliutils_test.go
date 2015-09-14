@@ -3,6 +3,7 @@ package cliutils
 import (
         "testing"
         "strings"
+        "github.com/stretchr/testify/assert"
 )
 
 func TestContains(t *testing.T) {
@@ -35,24 +36,16 @@ func TestInitializeCli(t *testing.T) {
                 "httpHeaders" : []string{"Content-Type: application/json"},
                 "postData"    : "",
                 "timeOut"     : 60,
+                "verbose"     : false,
                 "arguments"   : []string{"http://localhost:8080/something"},
         }
         cliInputs := InititializeCli(cliMap)
-        if cliInputs.Url() != "http://localhost:8080/something" {
-                t.Errorf("Url() returned %v, want %v", cliInputs.Url(), "http://localhost:8080/something")
-        }
-        if cliInputs.HttpVerb() != "POST" {
-                t.Errorf("HttpVerb() returned %v, want %v", cliInputs.HttpVerb(), "POST")
-        }
-        if cliInputs.TimeOut() != 60 {
-                t.Errorf("TimeOut() returned %v, want %v", cliInputs.TimeOut(), 60)
-        }
-        if len(cliInputs.HttpHeaders()) != 1 && cliInputs.HttpHeaders()[0] != "Content-Type: application/json" {
-                t.Errorf("HttpHeaders() returned %v, want %v", cliInputs.HttpHeaders(), "Content-Type: application/json")
-        }
 
-
-
+        assert.Equal(t, cliInputs.Url(), "http://localhost:8080/something", "Url should be first argument")
+        assert.Equal(t, cliInputs.HttpVerb(), "POST", "HTTP Verb should be POST")
+        assert.Equal(t, cliInputs.TimeOut(), 60, "Timeout should be 60")
+        assert.Equal(t, len(cliInputs.HttpHeaders()), 1, "Should be 1 Header")
+        assert.Equal(t, cliInputs.HttpHeaders()[0], "Content-Type: application/json", "Header should have application/json")
 }
 
 func TestValidateOptions(t *testing.T) {
@@ -62,14 +55,13 @@ func TestValidateOptions(t *testing.T) {
                 "httpHeaders" : []string{},
                 "postData"    : "",
                 "timeOut"     : 60,
+                "verbose"     : false,
                 "arguments"   : []string{},
         }
         cliInputs := InititializeCli(cliMap)
         code, _ := ValidateOptions(cliInputs)
 
-        if code != 0 {
-                t.Errorf("ValidateOptions(%v) returned %v, want %v", cliMap, code, 0)
-        }
+        assert.Zero(t, code, "Return code should be 0")
 
 
         // Error Path
@@ -77,9 +69,7 @@ func TestValidateOptions(t *testing.T) {
         cliInputs = InititializeCli(cliMap)
         code, message := ValidateOptions(cliInputs)
 
-        if code != 1 {
-                t.Errorf("ValidateOptions(%v) returned %v, want %v", cliMap, code, "non zero")
-        }
+        assert.Equal(t, code, 1, "Return code should be 1")
         if ! strings.Contains(message, "Unexpected HTTP Verb") {
                 t.Error("Error message should contain \"Unexpected HTTP Verb\"")
         }
@@ -92,23 +82,20 @@ func TestValidateArguments(t *testing.T) {
                 "httpHeaders" : []string{},
                 "postData"    : "",
                 "timeOut"     : 60,
+                "verbose"     : false,
                 "arguments"   : []string{"http://google.com"},
         }
         cliInputs := InititializeCli(cliMap)
         code, _ := ValidateArguments(cliInputs)
 
-        if code != 0 {
-                t.Errorf("ValidateArguments(%v) returned %v, want %v", cliMap["arguments"], code, 0)
-        }
+        assert.Zero(t, code, "Return code should be 0")
 
         // Error Path
         cliMap["arguments"] = []string{"http://google.com", "http://localhost:8080"}
         cliInputs = InititializeCli(cliMap)
         code, message := ValidateArguments(cliInputs)
 
-        if code != 2 {
-                t.Errorf("ValidateArguments(%v) returned %v, want %v", cliMap["arguments"], code, "non zero")
-        }
+        assert.Equal(t, code, 2, "Return code should be 2")
         if ! strings.Contains(message, "Expecting 1 positional argument") {
                 t.Error("Error message should contain \"Expecting 1 positional argument\"")
         }
