@@ -2,6 +2,7 @@ package httputils
 
 import (
         "net/http"
+        "net/http/httputil"
         "bytes"
         "strings"
         "io/ioutil"
@@ -100,12 +101,12 @@ func processRequest(req *http.Request, verbose bool) int {
 }
 
 func printRequest(req *http.Request) {
-        var reqOutput bytes.Buffer
-        req.Write(&reqOutput)
+        reqDump, err := httputil.DumpRequestOut(req, true)
         fmt.Println("Request:")
-        r := bufio.NewReader(&reqOutput)
+
+        r := bufio.NewReader(bytes.NewBuffer(reqDump))
         line, isPrefix, err := r.ReadLine()
-        for err == nil && string(line) != "" && !isPrefix {
+        for err == nil && !isPrefix {
                 s := string(line)
                 fmt.Printf("> %s\n", s)
                 line, isPrefix, err = r.ReadLine()
@@ -114,12 +115,12 @@ func printRequest(req *http.Request) {
 }
 
 func printResponse(resp *http.Response) {
-        var respOutput bytes.Buffer
-        resp.Write(&respOutput)
+        respDump, err := httputil.DumpResponse(resp, false)
         fmt.Println("Response:")
-        r := bufio.NewReader(&respOutput)
+
+        r := bufio.NewReader(bytes.NewBuffer(respDump))
         line, isPrefix, err := r.ReadLine()
-        for err == nil && string(line) != "" && !isPrefix {
+        for err == nil && !isPrefix {
                 s := string(line)
                 fmt.Printf("< %s\n", s)
                 line, isPrefix, err = r.ReadLine()
