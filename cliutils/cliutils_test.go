@@ -52,7 +52,7 @@ func TestValidateOptions(t *testing.T) {
         // Happy Path
         var cliMap = map[string]interface{}{
                 "httpVerb"    : "GET",
-                "httpHeaders" : []string{},
+                "httpHeaders" : []string{"Key1:Value1", "Key2:Value2"},
                 "postData"    : "",
                 "timeOut"     : 60,
                 "verbose"     : false,
@@ -63,16 +63,24 @@ func TestValidateOptions(t *testing.T) {
 
         assert.Zero(t, code, "Return code should be 0")
 
-
         // Error Path
         cliMap["httpVerb"] = "GOT"
         cliInputs = InititializeCli(cliMap)
         code, message := ValidateOptions(cliInputs)
 
         assert.Equal(t, code, 1, "Return code should be 1")
-        if ! strings.Contains(message, "Unexpected HTTP Verb") {
-                t.Error("Error message should contain \"Unexpected HTTP Verb\"")
-        }
+        assert.True(t, strings.Contains(message, "Unexpected HTTP Verb"),
+                "Error message should contain \"Unexpected HTTP Verb\"")
+
+        cliMap["httpVerb"] = "GET"
+        cliMap["httpHeaders"] = []string{"Key1 Value1"}
+        cliInputs = InititializeCli(cliMap)
+        code, message = ValidateOptions(cliInputs)
+
+        assert.Equal(t, code, 1, "Return code should be 1")
+        assert.True(t, strings.Contains(message, "Unexpected HTTP Header"),
+                "Error message should contain \"Unexpected HTTP Header\"")
+
 }
 
 func TestValidateArguments(t *testing.T) {
@@ -96,7 +104,6 @@ func TestValidateArguments(t *testing.T) {
         code, message := ValidateArguments(cliInputs)
 
         assert.Equal(t, code, 2, "Return code should be 2")
-        if ! strings.Contains(message, "Expecting 1 positional argument") {
-                t.Error("Error message should contain \"Expecting 1 positional argument\"")
-        }
+        assert.True(t, strings.Contains(message, "Expecting 1 positional argument"),
+                "Error message should contain \"Expecting 1 positional argument\"")
 }

@@ -7,10 +7,9 @@ import (
 
 func TestParseHeaderString(t *testing.T) {
         headers := []string{"Key1:Value1", "Key2:Value2"}
-        parsedHeaderMap, ok := parseHeaderString(headers)
+        parsedHeaderMap := parseHeaderString(headers)
 
         assert.NotNil(t, parsedHeaderMap, "Parsed map should not be nil")
-        assert.True(t, ok, "Parsing failed")
 
         for key, value := range parsedHeaderMap {
 
@@ -22,9 +21,4 @@ func TestParseHeaderString(t *testing.T) {
                 }
         }
 
-        headers = []string{"Key1:Value1:invalid", "Key2:Value2"}
-        parsedHeaderMap, ok = parseHeaderString(headers)
-
-        assert.Nil(t, parsedHeaderMap, "Parsed map should be nil")
-        assert.False(t, ok, "Parsing succeeded when it should have failed")
 }

@@ -53,7 +53,6 @@ func cliSetup() *cliutils.GoCurlCli {
 }
 
 func run(cliInputs *cliutils.GoCurlCli) int {
-        printOptionsAndArgs(cliInputs)
         return httputils.SubmitRequest(cliInputs)
 }
 
@@ -61,11 +60,5 @@ func exitWithMessageIfNonZero(code int, message string) {
         if code != 0 {
                 fmt.Println(message)
                 os.Exit(code)
-        }
-}
-
-func printOptionsAndArgs(cliInputs *cliutils.GoCurlCli) {
-        if cliInputs.Verbose() {
-                cliInputs.Print()
         }
 }

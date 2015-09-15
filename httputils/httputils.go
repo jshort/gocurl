@@ -5,9 +5,12 @@ import (
         "bytes"
         "strings"
         "io/ioutil"
+        "bufio"
         "fmt"
         "github.com/jshort/gocurl/cliutils"
 )
+
+const userAgent string = "Gocurl-client/1.0" 
 
 var client *http.Client = http.DefaultClient
 
@@ -31,61 +34,20 @@ func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
 }
 
 func get(cliInputs *cliutils.GoCurlCli) int {
+        req, _ := http.NewRequest("GET", cliInputs.Url(), nil)
 
-        req, err := http.NewRequest("GET", cliInputs.Url(), nil)
-        headerMap, ok := parseHeaderString(cliInputs.HttpHeaders())
-        if !ok {
-                return 1
-        }
-        for key, value := range headerMap {
-                req.Header.Set(key, value)
-        }
+        prepareRequest(req, cliInputs.HttpHeaders(), cliInputs.Verbose())
 
-        fmt.Printf("Request Header:\n%v\n", req.Header)
-
-        resp, err := client.Do(req)
-        if err != nil {
-                fmt.Printf("error in get\n")
-                return 1
-        }
-        defer resp.Body.Close()
-        respBody, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-                return 1
-        }
-        fmt.Printf("Response Header:\n%v\n", resp.Header)
-        fmt.Printf("Response Status:\n%s\n", resp.Status)
-        fmt.Printf("Response Body:\n%s\n", respBody)
-        return 0
+        return processRequest(req, cliInputs.Verbose())
 }
 
 func post(cliInputs *cliutils.GoCurlCli) int {
         var postBody = []byte(cliInputs.PostData())
-        req, err := http.NewRequest("POST", cliInputs.Url(), bytes.NewBuffer(postBody))
-        headerMap, ok := parseHeaderString(cliInputs.HttpHeaders())
-        if !ok {
-                return 1
-        }
-        for key, value := range headerMap {
-                req.Header.Set(key, value)
-        }
+        req, _ := http.NewRequest("POST", cliInputs.Url(), bytes.NewBuffer(postBody))
 
-        fmt.Printf("Request Header:\n%v\n", req.Header)
+        prepareRequest(req, cliInputs.HttpHeaders(), cliInputs.Verbose())
 
-        resp, err := client.Do(req)
-        if err != nil {
-                fmt.Printf("error in post\n")
-                return 1
-        }
-        defer resp.Body.Close()
-        respBody, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-                return 1
-        }
-        fmt.Printf("Response Header:\n%v\n", resp.Header)
-        fmt.Printf("Response Status:\n%s\n", resp.Status)
-        fmt.Printf("Response Body:\n%s\n", respBody)
-        return 0
+        return processRequest(req, cliInputs.Verbose())
 }
 
 func put(cliInputs *cliutils.GoCurlCli) int {
@@ -105,14 +67,72 @@ func dummyReturn() int {
         return 255
 }
 
-func parseHeaderString(headers []string) (map[string]string, bool) {
+func prepareRequest(req *http.Request, headers []string, verbose bool) {
+        headerMap := parseHeaderString(headers)
+        req.Header.Set("User-Agent", userAgent)
+        for key, value := range headerMap {
+                req.Header.Set(key, value)
+        }
+
+        if verbose {
+                printRequest(req)
+        }
+}
+
+func processRequest(req *http.Request, verbose bool) int {
+        resp, err := client.Do(req)
+        if err != nil {
+                fmt.Printf("Error in processing request.\n")
+                return 1
+        }
+        defer resp.Body.Close()
+        respBody, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+                return 1
+        }
+
+        if verbose {
+                printResponse(resp)
+        }
+
+        fmt.Printf("%s\n", respBody)
+        return 0
+}
+
+func printRequest(req *http.Request) {
+        var reqOutput bytes.Buffer
+        req.Write(&reqOutput)
+        fmt.Println("Request:")
+        r := bufio.NewReader(&reqOutput)
+        line, isPrefix, err := r.ReadLine()
+        for err == nil && string(line) != "" && !isPrefix {
+                s := string(line)
+                fmt.Printf("> %s\n", s)
+                line, isPrefix, err = r.ReadLine()
+        }
+        fmt.Println("")
+}
+
+func printResponse(resp *http.Response) {
+        var respOutput bytes.Buffer
+        resp.Write(&respOutput)
+        fmt.Println("Response:")
+        r := bufio.NewReader(&respOutput)
+        line, isPrefix, err := r.ReadLine()
+        for err == nil && string(line) != "" && !isPrefix {
+                s := string(line)
+                fmt.Printf("< %s\n", s)
+                line, isPrefix, err = r.ReadLine()
+        }
+        fmt.Println("")
+}
+
+// Assumes the header slice was validated (1 colon per entry)
+func parseHeaderString(headers []string) map[string]string {
         var headerMap = make(map[string]string)
         for _, header := range headers {
                 tokens := strings.Split(header, ":")
-                if len(tokens) != 2 {
-                        return nil, false
-                }
                 headerMap[tokens[0]] = tokens[1]
         }
-        return headerMap, true
+        return headerMap
 }

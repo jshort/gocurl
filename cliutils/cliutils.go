@@ -2,6 +2,7 @@ package cliutils
 
 import (
         "fmt"
+        "strings"
 )
 
 var HttpVerbs = [5]string{"GET", "PUT", "POST", "DELETE", "PATCH"}
@@ -31,6 +32,11 @@ func InititializeCli(m map[string]interface{}) *GoCurlCli {
 func ValidateOptions(cliInputs *GoCurlCli) (int, string) {
         if ! contains(HttpVerbs[:], cliInputs.httpVerb) {
                 return 1, fmt.Sprintf("Unexpected HTTP Verb: %s", cliInputs.httpVerb)
+        }
+        for _, header := range cliInputs.httpHeaders {
+                if strings.Count(header, ":") != 1 {
+                        return 1, fmt.Sprintf("Unexpected HTTP Header: %s", header)
+                }
         }
         return 0, ""
 }
