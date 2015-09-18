@@ -21,6 +21,7 @@ func cliSetup() *cliutils.GoCurlCli {
                 "timeOut"     : 60,
                 "arguments"   : []string{},
                 "verbose"     : false,
+                "color"       : false,
         }
 
 
@@ -33,6 +34,8 @@ func cliSetup() *cliutils.GoCurlCli {
         var timeOut    = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliMap["timeOut"].(int),
                 "TIMEOUT", "Timeout in seconds for request")
         var isVerbose  = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
+        var hasColor   = goopt.Flag([]string{"-c", "--color"}, []string{}, "Colored output", "")
+
 
         goopt.Summary = "Golang based http client program"
         goopt.Parse(nil)
@@ -42,6 +45,7 @@ func cliSetup() *cliutils.GoCurlCli {
         cliMap["postData"]    = *postData
         cliMap["timeOut"]     = *timeOut
         cliMap["verbose"]     = *isVerbose
+        cliMap["color"]       = *hasColor
         cliMap["arguments"]   = goopt.Args
 
         cliInputs := cliutils.InititializeCli(cliMap)

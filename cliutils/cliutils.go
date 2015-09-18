@@ -8,12 +8,13 @@ import (
 var HttpVerbs = [5]string{"GET", "PUT", "POST", "DELETE", "PATCH"}
 
 type GoCurlCli struct {
-        httpVerb string
+        httpVerb    string
         httpHeaders []string
-        postData string
-        timeout int
-        verbose bool
-        arguments []string
+        postData    string
+        timeout     int
+        verbose     bool
+        color       bool
+        arguments   []string
 }
 
 func InititializeCli(m map[string]interface{}) *GoCurlCli {
@@ -23,6 +24,7 @@ func InititializeCli(m map[string]interface{}) *GoCurlCli {
         cliInputs.postData = m["postData"].(string)
         cliInputs.timeout = m["timeOut"].(int)
         cliInputs.verbose = m["verbose"].(bool)
+        cliInputs.color = m["color"].(bool)
         cliInputs.arguments = m["arguments"].([]string)
         return cliInputs
 }
@@ -66,6 +68,10 @@ func (cliInputs *GoCurlCli) TimeOut() int {
 
 func (cliInputs *GoCurlCli) Verbose() bool {
         return cliInputs.verbose
+}
+
+func (cliInputs *GoCurlCli) Color() bool {
+        return cliInputs.color
 }
 
 func (cliInputs *GoCurlCli) Url() string {

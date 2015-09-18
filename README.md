@@ -16,8 +16,6 @@ Given my second goal above, I don't intend to go terribly in-depth into a usage 
 
 ## LICENSE
 
-(The MIT License)
-
 The MIT License (MIT)
 
 Copyright (c) 2015 jshort

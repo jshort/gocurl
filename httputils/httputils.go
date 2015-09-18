@@ -16,6 +16,8 @@ const userAgent string = "Gocurl-client/1.0"
 var client *http.Client = http.DefaultClient
 
 func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
+        applyColor(cliInputs.Color())
+        
         var retval int
 
         switch cliInputs.HttpVerb() {
@@ -89,6 +91,7 @@ func processRequest(req *http.Request, verbose bool) int {
         defer resp.Body.Close()
         respBody, err := ioutil.ReadAll(resp.Body)
         if err != nil {
+                fmt.Printf("Error reading body: %v\n", err)
                 return 1
         }
 
@@ -96,19 +99,19 @@ func processRequest(req *http.Request, verbose bool) int {
                 printResponse(resp)
         }
 
-        fmt.Printf("%s\n", respBody)
+        fmt.Printf("%s", respBody)
         return 0
 }
 
 func printRequest(req *http.Request) {
         reqDump, err := httputil.DumpRequestOut(req, true)
-        fmt.Println("Request:")
+        fmt.Println(bBlue("Request:"))
 
         r := bufio.NewReader(bytes.NewBuffer(reqDump))
         line, isPrefix, err := r.ReadLine()
         for err == nil && !isPrefix {
                 s := string(line)
-                fmt.Printf("> %s\n", s)
+                fmt.Printf("%s %s\n", bCyan(">"), bYellow(s))
                 line, isPrefix, err = r.ReadLine()
         }
         fmt.Println("")
@@ -116,13 +119,22 @@ func printRequest(req *http.Request) {
 
 func printResponse(resp *http.Response) {
         respDump, err := httputil.DumpResponse(resp, false)
-        fmt.Println("Response:")
+        fmt.Println(bBlue("Response:"))
 
         r := bufio.NewReader(bytes.NewBuffer(respDump))
+
+        firstline, isPrefix, err := r.ReadLine()
+        if err == nil {
+                splitFirstline := strings.SplitN(string(firstline), " ", 2)
+                fmt.Printf("%s %s %s\n", bCyan("<"),
+                        bRed(splitFirstline[0]),
+                        bMagenta(splitFirstline[1]))
+        }
+
         line, isPrefix, err := r.ReadLine()
         for err == nil && !isPrefix {
                 s := string(line)
-                fmt.Printf("< %s\n", s)
+                fmt.Printf("%s %s\n", bCyan("<"), bRed(s))
                 line, isPrefix, err = r.ReadLine()
         }
         fmt.Println("")

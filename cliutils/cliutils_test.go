@@ -37,6 +37,7 @@ func TestInitializeCli(t *testing.T) {
                 "postData"    : "",
                 "timeOut"     : 60,
                 "verbose"     : false,
+                "color"       : false,
                 "arguments"   : []string{"http://localhost:8080/something"},
         }
         cliInputs := InititializeCli(cliMap)
@@ -56,6 +57,7 @@ func TestValidateOptions(t *testing.T) {
                 "postData"    : "",
                 "timeOut"     : 60,
                 "verbose"     : false,
+                "color"       : false,
                 "arguments"   : []string{},
         }
         cliInputs := InititializeCli(cliMap)
@@ -91,6 +93,7 @@ func TestValidateArguments(t *testing.T) {
                 "postData"    : "",
                 "timeOut"     : 60,
                 "verbose"     : false,
+                "color"       : false,
                 "arguments"   : []string{"http://google.com"},
         }
         cliInputs := InititializeCli(cliMap)
