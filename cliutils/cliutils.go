@@ -17,15 +17,16 @@ type GoCurlCli struct {
         arguments   []string
 }
 
-func InititializeCli(m map[string]interface{}) *GoCurlCli {
-        cliInputs := new(GoCurlCli)
-        cliInputs.httpVerb = m["httpVerb"].(string)
-        cliInputs.httpHeaders = m["httpHeaders"].([]string)
-        cliInputs.postData = m["postData"].(string)
-        cliInputs.timeout = m["timeOut"].(int)
-        cliInputs.verbose = m["verbose"].(bool)
-        cliInputs.color = m["color"].(bool)
-        cliInputs.arguments = m["arguments"].([]string)
+func NewGoCurlCli() *GoCurlCli {
+        cliInputs := &GoCurlCli{
+                httpVerb:    "GET",
+                httpHeaders: []string{},
+                postData:    "",
+                timeout:     60,
+                verbose:     false,
+                color:       false,
+                arguments:   []string{},
+        }
         return cliInputs
 }
 
@@ -54,36 +55,56 @@ func (cliInputs *GoCurlCli) HttpVerb() string {
         return cliInputs.httpVerb
 }
 
+func (cliInputs *GoCurlCli) SetHttpVerb(httpVerb string) {
+        cliInputs.httpVerb = httpVerb
+}
+
 func (cliInputs *GoCurlCli) HttpHeaders() []string {
         return cliInputs.httpHeaders
+}
+
+func (cliInputs *GoCurlCli) SetHttpHeaders(headers []string) {
+        cliInputs.httpHeaders = headers
 }
 
 func (cliInputs *GoCurlCli) PostData() string {
         return cliInputs.postData
 }
 
-func (cliInputs *GoCurlCli) TimeOut() int {
+func (cliInputs *GoCurlCli) SetPostData(postData string) {
+        cliInputs.postData = postData
+}
+
+func (cliInputs *GoCurlCli) Timeout() int {
         return cliInputs.timeout
+}
+
+func (cliInputs *GoCurlCli) SetTimeout(timeout int) {
+        cliInputs.timeout = timeout
 }
 
 func (cliInputs *GoCurlCli) Verbose() bool {
         return cliInputs.verbose
 }
 
+func (cliInputs *GoCurlCli) SetVerbose(verbose bool) {
+        cliInputs.verbose = verbose
+}
+
 func (cliInputs *GoCurlCli) Color() bool {
         return cliInputs.color
 }
 
-func (cliInputs *GoCurlCli) Url() string {
-        return cliInputs.arguments[0]
+func (cliInputs *GoCurlCli) SetColor(color bool) {
+        cliInputs.color = color
 }
 
-func (cliInputs *GoCurlCli) Print() {
-        fmt.Printf("HTTP Verb is: %v\n", cliInputs.httpVerb)
-        fmt.Printf("HTTP Headers are: %v\n", cliInputs.httpHeaders)
-        fmt.Printf("POST Data is: %v\n", cliInputs.postData)
-        fmt.Printf("Request Timeout is: %v\n", cliInputs.timeout)
-        fmt.Printf("Url is: %v\n\n", cliInputs.arguments[0])
+func (cliInputs *GoCurlCli) SetArgs(arguments []string) {
+        cliInputs.arguments = arguments
+}
+
+func (cliInputs *GoCurlCli) Url() string {
+        return cliInputs.arguments[0]
 }
 
 // Checks if an array/slice contains a given string

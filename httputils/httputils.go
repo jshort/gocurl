@@ -17,7 +17,7 @@ var client *http.Client = http.DefaultClient
 
 func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
         applyColor(cliInputs.Color())
-        
+
         var retval int
 
         switch cliInputs.HttpVerb() {

@@ -14,24 +14,16 @@ func main() {
 }
 
 func cliSetup() *cliutils.GoCurlCli {
-        var cliMap = map[string]interface{}{
-                "httpVerb"    : "GET",
-                "httpHeaders" : []string{},
-                "postData"    : "",
-                "timeOut"     : 60,
-                "arguments"   : []string{},
-                "verbose"     : false,
-                "color"       : false,
-        }
 
+        cliInputs := cliutils.NewGoCurlCli()
 
-        var httpVerb   = goopt.StringWithLabel([]string{"-X", "--command"}, cliMap["httpVerb"].(string),
+        var httpVerb   = goopt.StringWithLabel([]string{"-X", "--command"}, cliInputs.HttpVerb(),
                 "COMMAND", fmt.Sprintf("HTTP verb for request: %s", cliutils.HttpVerbs))
         var httpHeaders = goopt.Strings([]string{"-H", "--header"},
                 "KEY:VALUE", "Custom HTTP Headers to be sent with request (can pass multiple times)")
-        var postData   = goopt.StringWithLabel([]string{"-d", "--data"}, cliMap["postData"].(string),
+        var postData   = goopt.StringWithLabel([]string{"-d", "--data"}, cliInputs.PostData(),
                 "DATA", "HTTP Data for POST")
-        var timeOut    = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliMap["timeOut"].(int),
+        var timeOut    = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliInputs.Timeout(),
                 "TIMEOUT", "Timeout in seconds for request")
         var isVerbose  = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
         var hasColor   = goopt.Flag([]string{"-c", "--color"}, []string{}, "Colored output", "")
@@ -40,15 +32,13 @@ func cliSetup() *cliutils.GoCurlCli {
         goopt.Summary = "Golang based http client program"
         goopt.Parse(nil)
 
-        cliMap["httpVerb"]    = *httpVerb
-        cliMap["httpHeaders"] = *httpHeaders
-        cliMap["postData"]    = *postData
-        cliMap["timeOut"]     = *timeOut
-        cliMap["verbose"]     = *isVerbose
-        cliMap["color"]       = *hasColor
-        cliMap["arguments"]   = goopt.Args
-
-        cliInputs := cliutils.InititializeCli(cliMap)
+        cliInputs.SetHttpVerb(*httpVerb)
+        cliInputs.SetHttpHeaders(*httpHeaders)
+        cliInputs.SetPostData(*postData)
+        cliInputs.SetTimeout(*timeOut)
+        cliInputs.SetVerbose(*isVerbose)
+        cliInputs.SetColor(*hasColor)
+        cliInputs.SetArgs(goopt.Args)
         
         exitWithMessageIfNonZero(cliutils.ValidateOptions(cliInputs))
         exitWithMessageIfNonZero(cliutils.ValidateArguments(cliInputs))
