@@ -2,7 +2,10 @@ package httputils
 
 import (
         "net/http"
+        "errors"
+        "regexp"
         "net/http/httputil"
+        "crypto/tls"
         "bytes"
         "strings"
         "io/ioutil"
@@ -13,15 +16,28 @@ import (
 
 const userAgent string = "Gocurl-client/1.0" 
 
-var client *http.Client = http.DefaultClient
+var verboseOutput bool = false
+
+var tr *http.Transport = &http.Transport{
+        TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
+}
+
+var client *http.Client = &http.Client{
+        Transport: tr,
+        CheckRedirect: redirectHandler,
+}
 
 func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
+        verboseOutput = cliInputs.Verbose()
         applyColor(cliInputs.Color())
+        configureTls(cliInputs)
 
         var retval int
 
         switch cliInputs.HttpVerb() {
         case "GET":
+                retval = get(cliInputs)
+        case "HEAD":
                 retval = get(cliInputs)
         case "POST":
                 retval = post(cliInputs)
@@ -37,20 +53,20 @@ func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
 }
 
 func get(cliInputs *cliutils.GoCurlCli) int {
-        req, _ := http.NewRequest("GET", cliInputs.Url(), nil)
+        req, _ := http.NewRequest(cliInputs.HttpVerb(), cliInputs.Url(), nil)
 
-        prepareRequest(req, cliInputs.HttpHeaders(), cliInputs.Verbose())
+        prepareRequest(req, cliInputs.HttpHeaders())
 
-        return processRequest(req, cliInputs.Verbose())
+        return processRequest(req, cliInputs)
 }
 
 func post(cliInputs *cliutils.GoCurlCli) int {
         var postBody = []byte(cliInputs.PostData())
         req, _ := http.NewRequest("POST", cliInputs.Url(), bytes.NewBuffer(postBody))
 
-        prepareRequest(req, cliInputs.HttpHeaders(), cliInputs.Verbose())
+        prepareRequest(req, cliInputs.HttpHeaders())
 
-        return processRequest(req, cliInputs.Verbose())
+        return processRequest(req, cliInputs)
 }
 
 func put(cliInputs *cliutils.GoCurlCli) int {
@@ -70,23 +86,31 @@ func dummyReturn() int {
         return 255
 }
 
-func prepareRequest(req *http.Request, headers []string, verbose bool) {
+func prepareRequest(req *http.Request, headers []string) {
         headerMap := parseHeaderString(headers)
         req.Header.Set("User-Agent", userAgent)
         for key, value := range headerMap {
                 req.Header.Set(key, value)
         }
 
-        if verbose {
+        if verboseOutput {
                 printRequest(req)
         }
 }
 
-func processRequest(req *http.Request, verbose bool) int {
-        resp, err := client.Do(req)
+func processRequest(req *http.Request, cliInputs *cliutils.GoCurlCli) int {
+        var resp *http.Response
+        var err error
+        if cliInputs.Redirect() {
+                resp, err = client.Do(req)
+        } else {
+                resp, err = tr.RoundTrip(req)
+        }
+        
         if err != nil {
-                fmt.Printf("Error in processing request.\n")
-                return 1
+                retval, msg := handleHttpError(err)
+                fmt.Println(msg)
+                return retval
         }
         defer resp.Body.Close()
         respBody, err := ioutil.ReadAll(resp.Body)
@@ -95,7 +119,7 @@ func processRequest(req *http.Request, verbose bool) int {
                 return 1
         }
 
-        if verbose {
+        if verboseOutput {
                 printResponse(resp)
         }
 
@@ -118,24 +142,15 @@ func printRequest(req *http.Request) {
 }
 
 func printResponse(resp *http.Response) {
-        respDump, err := httputil.DumpResponse(resp, false)
         fmt.Println(bBlue("Response:"))
-
-        r := bufio.NewReader(bytes.NewBuffer(respDump))
-
-        firstline, isPrefix, err := r.ReadLine()
-        if err == nil {
-                splitFirstline := strings.SplitN(string(firstline), " ", 2)
-                fmt.Printf("%s %s %s\n", bCyan("<"),
-                        bRed(splitFirstline[0]),
-                        bMagenta(splitFirstline[1]))
-        }
-
-        line, isPrefix, err := r.ReadLine()
-        for err == nil && !isPrefix {
-                s := string(line)
-                fmt.Printf("%s %s\n", bCyan("<"), bRed(s))
-                line, isPrefix, err = r.ReadLine()
+        fmt.Printf("%s %s %s\n", bCyan("<"),
+                        bRed(resp.Proto),
+                        bMagenta(resp.Status))
+        for header, values := range resp.Header {
+                fmt.Printf("%s %s: %s\n",
+                        bCyan("<"),
+                        bRed(header),
+                        bRed(strings.Join(values, ", ")))
         }
         fmt.Println("")
 }
@@ -148,4 +163,45 @@ func parseHeaderString(headers []string) map[string]string {
                 headerMap[tokens[0]] = tokens[1]
         }
         return headerMap
+}
+
+func configureTls(cliInputs *cliutils.GoCurlCli) {
+        if ! cliInputs.SslSecure() {
+                (*tr).TLSClientConfig.InsecureSkipVerify = true
+        }
+}
+
+func redirectHandler(req *http.Request, via []*http.Request) error {
+        if len(via) >= 10 {
+                return errors.New("stopped after 10 redirects")
+        }
+        if verboseOutput {
+                printRequest(req)
+        }
+        return nil
+}
+
+func handleHttpError(err error) (retval int, msg string) {
+        switch {
+        case strings.Contains(err.Error(), "malformed HTTP response"):
+                retval = 1
+                msg = "ERROR: HTTP request sent to HTTPS listener"
+        case strings.Contains(err.Error(), "tls: oversized record received"):
+                retval = 2
+                msg = "ERROR: HTTPS request sent to HTTP listener"
+        case strings.Contains(err.Error(), "getsockopt: connection refused"):
+                retval = 3
+                msg = "ERROR: Invalid host or port"
+        case strings.Contains(err.Error(), "x509: certificate signed by unknown authority"):
+                retval = 4
+                msg = "ERROR: Server certificate unknown (perhaps try with -k if testing)"
+        case strings.Contains(err.Error(), "no such host"):
+                hostOrIpRegex := regexp.MustCompile(`lookup ([\w\.]+):`)
+                retval = 5
+                msg = "ERROR: No such host: " + hostOrIpRegex.FindStringSubmatch(err.Error())[1]
+        default:
+                retval = 255
+                msg = "ERROR: " + err.Error()
+        }
+        return
 }

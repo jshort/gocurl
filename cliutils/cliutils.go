@@ -5,7 +5,7 @@ import (
         "strings"
 )
 
-var HttpVerbs = [5]string{"GET", "PUT", "POST", "DELETE", "PATCH"}
+var HttpVerbs = [6]string{"GET", "HEAD", "PUT", "POST", "DELETE", "PATCH"}
 
 type GoCurlCli struct {
         httpVerb    string
@@ -13,7 +13,9 @@ type GoCurlCli struct {
         postData    string
         timeout     int
         verbose     bool
+        redirect    bool
         color       bool
+        sslSecure   bool
         arguments   []string
 }
 
@@ -24,7 +26,9 @@ func NewGoCurlCli() *GoCurlCli {
                 postData:    "",
                 timeout:     60,
                 verbose:     false,
+                redirect:    false,
                 color:       false,
+                sslSecure:   true,
                 arguments:   []string{},
         }
         return cliInputs
@@ -91,12 +95,28 @@ func (cliInputs *GoCurlCli) SetVerbose(verbose bool) {
         cliInputs.verbose = verbose
 }
 
+func (cliInputs *GoCurlCli) Redirect() bool {
+        return cliInputs.redirect
+}
+
+func (cliInputs *GoCurlCli) SetRedirect(redirect bool) {
+        cliInputs.redirect = redirect
+}
+
 func (cliInputs *GoCurlCli) Color() bool {
         return cliInputs.color
 }
 
 func (cliInputs *GoCurlCli) SetColor(color bool) {
         cliInputs.color = color
+}
+
+func (cliInputs *GoCurlCli) SslSecure() bool {
+        return cliInputs.sslSecure
+}
+
+func (cliInputs *GoCurlCli) SetSslSecure(sslSecure bool) {
+        cliInputs.sslSecure = sslSecure
 }
 
 func (cliInputs *GoCurlCli) SetArgs(arguments []string) {

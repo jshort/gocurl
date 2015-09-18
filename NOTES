@@ -1,0 +1,5 @@
+If http req is sent to https server: Error in processing request: malformed HTTP response "\x15\x03\x01\x00\x02\x02"
+
+If self signed cert on server without insecure flag (handle better): Error in processing request: x509: certificate signed by unknown authority
+
+

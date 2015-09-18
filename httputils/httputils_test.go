@@ -2,6 +2,7 @@ package httputils
 
 import (
         "testing"
+        "errors"
         "github.com/stretchr/testify/assert"
 )
 
@@ -20,5 +21,31 @@ func TestParseHeaderString(t *testing.T) {
                         assert.Equal(t, value, "Value2", "Key2 should have Value2")
                 }
         }
+
+}
+
+func TestErrorHandling(t *testing.T) {
+        err := errors.New("malformed HTTP response")
+
+        retval, _ := handleHttpError(err)
+        assert.Equal(t, retval, 1)
+
+        err = errors.New("tls: oversized record received")
+
+        retval, _ = handleHttpError(err)
+        assert.Equal(t, retval, 2)
+
+        err = errors.New("lookup blahblah.com: no such host")
+
+        retval, msg := handleHttpError(err)
+        assert.Equal(t, retval, 5)
+        assert.Contains(t, msg, "blahblah.com")
+
+        err = errors.New("blah blah")
+
+        retval, _ = handleHttpError(err)
+        assert.Equal(t, retval, 255)
+
+
 
 }

@@ -3,8 +3,8 @@ package main
 import (
         "fmt"
         "os"
-        goopt "github.com/droundy/goopt"
-        cliutils "github.com/jshort/gocurl/cliutils"
+        goopt     "github.com/droundy/goopt"
+        cliutils  "github.com/jshort/gocurl/cliutils"
         httputils "github.com/jshort/gocurl/httputils"
 )
 
@@ -17,16 +17,18 @@ func cliSetup() *cliutils.GoCurlCli {
 
         cliInputs := cliutils.NewGoCurlCli()
 
-        var httpVerb   = goopt.StringWithLabel([]string{"-X", "--command"}, cliInputs.HttpVerb(),
+        var httpVerb       = goopt.StringWithLabel([]string{"-X", "--command"}, cliInputs.HttpVerb(),
                 "COMMAND", fmt.Sprintf("HTTP verb for request: %s", cliutils.HttpVerbs))
-        var httpHeaders = goopt.Strings([]string{"-H", "--header"},
+        var httpHeaders    = goopt.Strings([]string{"-H", "--header"},
                 "KEY:VALUE", "Custom HTTP Headers to be sent with request (can pass multiple times)")
-        var postData   = goopt.StringWithLabel([]string{"-d", "--data"}, cliInputs.PostData(),
+        var postData       = goopt.StringWithLabel([]string{"-d", "--data"}, cliInputs.PostData(),
                 "DATA", "HTTP Data for POST")
-        var timeOut    = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliInputs.Timeout(),
+        var timeOut        = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliInputs.Timeout(),
                 "TIMEOUT", "Timeout in seconds for request")
-        var isVerbose  = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
-        var hasColor   = goopt.Flag([]string{"-c", "--color"}, []string{}, "Colored output", "")
+        var shouldRedirect = goopt.Flag([]string{"-r", "--redirect"}, []string{}, "Follow redirects", "")
+        var isVerbose      = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
+        var hasColor       = goopt.Flag([]string{"-c", "--color"}, []string{}, "Colored output", "")
+        var isInsecureSSL  = goopt.Flag([]string{"-k", "--insecure"}, []string{}, "Allow insecure https connections", "")
 
 
         goopt.Summary = "Golang based http client program"
@@ -37,7 +39,9 @@ func cliSetup() *cliutils.GoCurlCli {
         cliInputs.SetPostData(*postData)
         cliInputs.SetTimeout(*timeOut)
         cliInputs.SetVerbose(*isVerbose)
+        cliInputs.SetRedirect(*shouldRedirect)
         cliInputs.SetColor(*hasColor)
+        cliInputs.SetSslSecure(! *isInsecureSSL)
         cliInputs.SetArgs(goopt.Args)
         
         exitWithMessageIfNonZero(cliutils.ValidateOptions(cliInputs))
