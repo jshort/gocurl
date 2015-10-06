@@ -124,7 +124,15 @@ func (cliInputs *GoCurlCli) SetArgs(arguments []string) {
 }
 
 func (cliInputs *GoCurlCli) Url() string {
-        return cliInputs.arguments[0]
+        return parseUrl(cliInputs.arguments[0])
+}
+
+func parseUrl(rawurl string) string {
+        parsedurl := rawurl
+        if ! (strings.HasPrefix(rawurl, "http://") || strings.HasPrefix(rawurl, "https://")) {
+                parsedurl = "http://" + rawurl
+        }
+        return parsedurl
 }
 
 // Checks if an array/slice contains a given string
