@@ -1,4 +1,4 @@
-package httputils
+package main
 
 import (
         "net/http"
@@ -11,7 +11,6 @@ import (
         "io/ioutil"
         "bufio"
         "fmt"
-        "github.com/jshort/gocurl/cliutils"
 )
 
 const userAgent string = "Gocurl-client/1.0" 
@@ -27,57 +26,57 @@ var client *http.Client = &http.Client{
         CheckRedirect: redirectHandler,
 }
 
-func SubmitRequest(cliInputs *cliutils.GoCurlCli) int {
-        verboseOutput = cliInputs.Verbose()
-        applyColor(cliInputs.Color())
-        configureTls(cliInputs)
+func submitRequest(options *cliOptions) int {
+        verboseOutput = options.verbose
+        applyColor(options.color)
+        configureTls(options)
 
         var retval int
 
-        switch cliInputs.HttpVerb() {
+        switch options.httpVerb {
         case "GET":
-                retval = get(cliInputs)
+                retval = get(options)
         case "HEAD":
-                retval = get(cliInputs)
+                retval = get(options)
         case "POST":
-                retval = post(cliInputs)
+                retval = post(options)
         case "PUT":
-                retval = put(cliInputs)
+                retval = put(options)
         case "DELETE":
-                retval = delete(cliInputs)
+                retval = delete(options)
         case "PATCH":
-                retval = patch(cliInputs)
+                retval = patch(options)
         }
 
         return retval
 }
 
-func get(cliInputs *cliutils.GoCurlCli) int {
-        req, _ := http.NewRequest(cliInputs.HttpVerb(), cliInputs.Url(), nil)
+func get(options *cliOptions) int {
+        req, _ := http.NewRequest(options.httpVerb, options.url(), nil)
 
-        prepareRequest(req, cliInputs.HttpHeaders())
+        prepareRequest(req, options.httpHeaders)
 
-        return processRequest(req, cliInputs)
+        return processRequest(req, options)
 }
 
-func post(cliInputs *cliutils.GoCurlCli) int {
-        var postBody = []byte(cliInputs.PostData())
-        req, _ := http.NewRequest("POST", cliInputs.Url(), bytes.NewBuffer(postBody))
+func post(options *cliOptions) int {
+        var postBody = []byte(options.postData)
+        req, _ := http.NewRequest("POST", options.url(), bytes.NewBuffer(postBody))
 
-        prepareRequest(req, cliInputs.HttpHeaders())
+        prepareRequest(req, options.httpHeaders)
 
-        return processRequest(req, cliInputs)
+        return processRequest(req, options)
 }
 
-func put(cliInputs *cliutils.GoCurlCli) int {
+func put(options *cliOptions) int {
         return dummyReturn()
 }
 
-func delete(cliInputs *cliutils.GoCurlCli) int {
+func delete(options *cliOptions) int {
         return dummyReturn()
 }
 
-func patch(cliInputs *cliutils.GoCurlCli) int {
+func patch(options *cliOptions) int {
         return dummyReturn()
 }
 
@@ -89,6 +88,7 @@ func dummyReturn() int {
 func prepareRequest(req *http.Request, headers []string) {
         headerMap := parseHeaderString(headers)
         req.Header.Set("User-Agent", userAgent)
+        req.Header.Set("Accept-Encoding", "identity")
         for key, value := range headerMap {
                 req.Header.Set(key, value)
         }
@@ -98,10 +98,10 @@ func prepareRequest(req *http.Request, headers []string) {
         }
 }
 
-func processRequest(req *http.Request, cliInputs *cliutils.GoCurlCli) int {
+func processRequest(req *http.Request, options *cliOptions) int {
         var resp *http.Response
         var err error
-        if cliInputs.Redirect() {
+        if options.redirect {
                 resp, err = client.Do(req)
         } else {
                 resp, err = tr.RoundTrip(req)
@@ -165,8 +165,8 @@ func parseHeaderString(headers []string) map[string]string {
         return headerMap
 }
 
-func configureTls(cliInputs *cliutils.GoCurlCli) {
-        if ! cliInputs.SslSecure() {
+func configureTls(options *cliOptions) {
+        if ! options.sslSecure {
                 (*tr).TLSClientConfig.InsecureSkipVerify = true
         }
 }

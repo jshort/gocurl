@@ -4,26 +4,24 @@ import (
         "fmt"
         "os"
         goopt     "github.com/droundy/goopt"
-        cliutils  "github.com/jshort/gocurl/cliutils"
-        httputils "github.com/jshort/gocurl/httputils"
 )
 
 func main() {
-        cliInputs := cliSetup()
-        os.Exit(run(cliInputs))
+        options := cliSetup()
+        os.Exit(run(options))
 }
 
-func cliSetup() *cliutils.GoCurlCli {
+func cliSetup() *cliOptions {
 
-        cliInputs := cliutils.NewGoCurlCli()
+        options := newCliOptions()
 
-        var httpVerb       = goopt.StringWithLabel([]string{"-X", "--command"}, cliInputs.HttpVerb(),
-                "COMMAND", fmt.Sprintf("HTTP verb for request: %s", cliutils.HttpVerbs))
+        var httpVerb       = goopt.StringWithLabel([]string{"-X", "--command"}, options.httpVerb,
+                "COMMAND", fmt.Sprintf("HTTP verb for request: %s", HttpVerbs))
         var httpHeaders    = goopt.Strings([]string{"-H", "--header"},
                 "KEY:VALUE", "Custom HTTP Headers to be sent with request (can pass multiple times)")
-        var postData       = goopt.StringWithLabel([]string{"-d", "--data"}, cliInputs.PostData(),
+        var postData       = goopt.StringWithLabel([]string{"-d", "--data"}, options.postData,
                 "DATA", "HTTP Data for POST")
-        var timeOut        = goopt.IntWithLabel([]string{"-t", "--timeout"}, cliInputs.Timeout(),
+        var timeOut        = goopt.IntWithLabel([]string{"-t", "--timeout"}, options.timeout,
                 "TIMEOUT", "Timeout in seconds for request")
         var shouldRedirect = goopt.Flag([]string{"-r", "--redirect"}, []string{}, "Follow redirects", "")
         var isVerbose      = goopt.Flag([]string{"-v", "--verbose"}, []string{}, "Verbose output", "")
@@ -34,24 +32,24 @@ func cliSetup() *cliutils.GoCurlCli {
         goopt.Summary = "Golang based http client program"
         goopt.Parse(nil)
 
-        cliInputs.SetHttpVerb(*httpVerb)
-        cliInputs.SetHttpHeaders(*httpHeaders)
-        cliInputs.SetPostData(*postData)
-        cliInputs.SetTimeout(*timeOut)
-        cliInputs.SetVerbose(*isVerbose)
-        cliInputs.SetRedirect(*shouldRedirect)
-        cliInputs.SetColor(*hasColor)
-        cliInputs.SetSslSecure(! *isInsecureSSL)
-        cliInputs.SetArgs(goopt.Args)
+        options.httpVerb = *httpVerb
+        options.httpHeaders = *httpHeaders
+        options.postData = *postData
+        options.timeout = *timeOut
+        options.verbose = *isVerbose
+        options.redirect = *shouldRedirect
+        options.color = *hasColor
+        options.sslSecure = ! *isInsecureSSL
+        options.arguments = goopt.Args
         
-        exitWithMessageIfNonZero(cliutils.ValidateOptions(cliInputs))
-        exitWithMessageIfNonZero(cliutils.ValidateArguments(cliInputs))
+        exitWithMessageIfNonZero(validateOptions(options))
+        exitWithMessageIfNonZero(validateArguments(options))
 
-        return cliInputs
+        return options
 }
 
-func run(cliInputs *cliutils.GoCurlCli) int {
-        return httputils.SubmitRequest(cliInputs)
+func run(options *cliOptions) int {
+        return submitRequest(options)
 }
 
 func exitWithMessageIfNonZero(code int, message string) {

@@ -1,4 +1,4 @@
-package httputils
+package main
 
 import (
         "testing"
