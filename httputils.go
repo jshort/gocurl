@@ -166,7 +166,7 @@ func parseHeaderString(headers []string) map[string]string {
 }
 
 func configureTls(options *cliOptions) {
-        if ! options.sslSecure {
+        if options.sslInsecure {
                 (*tr).TLSClientConfig.InsecureSkipVerify = true
         }
 }

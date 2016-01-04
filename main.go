@@ -39,7 +39,7 @@ func cliSetup() *cliOptions {
         options.verbose = *isVerbose
         options.redirect = *shouldRedirect
         options.color = *hasColor
-        options.sslSecure = ! *isInsecureSSL
+        options.sslInsecure = *isInsecureSSL
         options.arguments = goopt.Args
         
         exitWithMessageIfNonZero(validateOptions(options))

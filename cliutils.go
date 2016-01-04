@@ -15,7 +15,7 @@ type cliOptions struct {
         verbose     bool
         redirect    bool
         color       bool
-        sslSecure   bool
+        sslInsecure   bool
         arguments   []string
 }
 
@@ -28,7 +28,7 @@ func newCliOptions() *cliOptions {
                 verbose:     false,
                 redirect:    false,
                 color:       false,
-                sslSecure:   true,
+                sslInsecure: false,
                 arguments:   []string{},
         }
         return options
