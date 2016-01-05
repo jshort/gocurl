@@ -11,6 +11,7 @@ import (
         "io/ioutil"
         "bufio"
         "fmt"
+        "os"
 )
 
 const userAgent string = "Gocurl-client/1.0" 
@@ -129,30 +130,30 @@ func processRequest(req *http.Request, options *cliOptions) int {
 
 func printRequest(req *http.Request) {
         reqDump, err := httputil.DumpRequestOut(req, true)
-        fmt.Println(bBlue("Request:"))
+        fmt.Fprintln(os.Stderr, bBlue("Request:"))
 
         r := bufio.NewReader(bytes.NewBuffer(reqDump))
         line, isPrefix, err := r.ReadLine()
         for err == nil && !isPrefix {
                 s := string(line)
-                fmt.Printf("%s %s\n", bCyan(">"), bYellow(s))
+                fmt.Fprintf(os.Stderr, "%s %s\n", bCyan(">"), bYellow(s))
                 line, isPrefix, err = r.ReadLine()
         }
-        fmt.Println("")
+        fmt.Fprintln(os.Stderr, "")
 }
 
 func printResponse(resp *http.Response) {
-        fmt.Println(bBlue("Response:"))
-        fmt.Printf("%s %s %s\n", bCyan("<"),
+        fmt.Fprintln(os.Stderr, bBlue("Response:"))
+        fmt.Fprintf(os.Stderr, "%s %s %s\n", bCyan("<"),
                         bRed(resp.Proto),
                         bMagenta(resp.Status))
         for header, values := range resp.Header {
-                fmt.Printf("%s %s: %s\n",
+                fmt.Fprintf(os.Stderr, "%s %s: %s\n",
                         bCyan("<"),
                         bRed(header),
                         bRed(strings.Join(values, ", ")))
         }
-        fmt.Println("")
+        fmt.Fprintln(os.Stderr, "")
 }
 
 // Assumes the header slice was validated (1 colon per entry)
